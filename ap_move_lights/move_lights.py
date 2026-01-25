@@ -89,7 +89,7 @@ def move_files(
         )
 
         # Move the file
-        ap_common.copy_file(
+        ap_common.move_file(
             from_file=filename_src,
             to_file=filename_dest,
             debug=debug,

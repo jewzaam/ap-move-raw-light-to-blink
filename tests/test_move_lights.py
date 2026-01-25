@@ -15,14 +15,14 @@ class TestMoveFiles:
 
     @patch("ap_common.get_filtered_metadata")
     @patch("ap_common.normalize_filename")
-    @patch("ap_common.copy_file")
+    @patch("ap_common.move_file")
     @patch("ap_common.delete_empty_directories")
     @patch("pathlib.Path.mkdir")
     def test_move_files_processes_light_files(
         self,
         mock_mkdir,
         mock_delete,
-        mock_copy_file,
+        mock_move_file,
         mock_normalize,
         mock_get_metadata,
         tmp_path,
@@ -64,18 +64,18 @@ class TestMoveFiles:
         normalize_kwargs = mock_normalize.call_args[1]
         assert normalize_kwargs["statedir"] == config.DIRECTORY_BLINK
 
-        # Should call copy_file
-        mock_copy_file.assert_called_once()
+        # Should call move_file
+        mock_move_file.assert_called_once()
 
         # Should clean up empty directories
         mock_delete.assert_called_once_with(source_dir, dryrun=False)
 
     @patch("ap_common.get_filtered_metadata")
     @patch("ap_common.normalize_filename")
-    @patch("ap_common.copy_file")
+    @patch("ap_common.move_file")
     @patch("ap_common.delete_empty_directories")
     def test_move_files_with_dryrun(
-        self, mock_delete, mock_copy_file, mock_normalize, mock_get_metadata, tmp_path
+        self, mock_delete, mock_move_file, mock_normalize, mock_get_metadata, tmp_path
     ):
         """Test move_files with dryrun flag."""
         source_dir = str(tmp_path / "source")
@@ -101,19 +101,19 @@ class TestMoveFiles:
 
         move_lights.move_files(source_dir, dest_dir, debug=False, dryrun=True)
 
-        # Should pass dryrun to copy_file and delete_empty_directories
-        mock_copy_file.assert_called_once()
-        copy_kwargs = mock_copy_file.call_args[1]
-        assert copy_kwargs["dryrun"] is True
+        # Should pass dryrun to move_file and delete_empty_directories
+        mock_move_file.assert_called_once()
+        move_kwargs = mock_move_file.call_args[1]
+        assert move_kwargs["dryrun"] is True
 
         mock_delete.assert_called_once_with(source_dir, dryrun=True)
 
     @patch("ap_common.get_filtered_metadata")
     @patch("ap_common.normalize_filename")
-    @patch("ap_common.copy_file")
+    @patch("ap_common.move_file")
     @patch("ap_common.delete_empty_directories")
     def test_move_files_with_debug(
-        self, mock_delete, mock_copy_file, mock_normalize, mock_get_metadata, tmp_path
+        self, mock_delete, mock_move_file, mock_normalize, mock_get_metadata, tmp_path
     ):
         """Test move_files with debug flag."""
         source_dir = str(tmp_path / "source")
@@ -139,17 +139,17 @@ class TestMoveFiles:
 
         move_lights.move_files(source_dir, dest_dir, debug=True, dryrun=False)
 
-        # Should pass debug to get_filtered_metadata and copy_file
+        # Should pass debug to get_filtered_metadata and move_file
         get_metadata_kwargs = mock_get_metadata.call_args[1]
         assert get_metadata_kwargs["debug"] is True
 
-        copy_kwargs = mock_copy_file.call_args[1]
-        assert copy_kwargs["debug"] is True
+        move_kwargs = mock_move_file.call_args[1]
+        assert move_kwargs["debug"] is True
 
     @patch("ap_common.get_filtered_metadata")
-    @patch("ap_common.copy_file")
+    @patch("ap_common.move_file")
     def test_move_files_skips_missing_type(
-        self, mock_copy_file, mock_get_metadata, tmp_path, capsys
+        self, mock_move_file, mock_get_metadata, tmp_path, capsys
     ):
         """Test that files without type are skipped."""
         source_dir = str(tmp_path / "source")
@@ -168,7 +168,7 @@ class TestMoveFiles:
         move_lights.move_files(source_dir, dest_dir, debug=False, dryrun=False)
 
         # Should not move file without type
-        mock_copy_file.assert_not_called()
+        mock_move_file.assert_not_called()
 
         # Should print warning
         captured = capsys.readouterr()
@@ -177,12 +177,12 @@ class TestMoveFiles:
 
     @patch("ap_common.get_filtered_metadata")
     @patch("ap_common.normalize_filename")
-    @patch("ap_common.copy_file")
+    @patch("ap_common.move_file")
     @patch("pathlib.Path.mkdir")
     def test_move_files_creates_accept_directories(
         self,
         mock_mkdir,
-        mock_copy_file,
+        mock_move_file,
         mock_normalize,
         mock_get_metadata,
         tmp_path,
@@ -238,12 +238,12 @@ class TestMoveFiles:
 
     @patch("ap_common.get_filtered_metadata")
     @patch("ap_common.normalize_filename")
-    @patch("ap_common.copy_file")
+    @patch("ap_common.move_file")
     @patch("pathlib.Path.mkdir")
     def test_move_files_no_accept_when_disabled(
         self,
         mock_mkdir,
-        mock_copy_file,
+        mock_move_file,
         mock_normalize,
         mock_get_metadata,
         tmp_path,
