@@ -6,6 +6,14 @@ A simple tool for moving and organizing astrophotography files from a raw direct
 
 This tool moves and organizes LIGHT files from a raw directory to a destination directory, organizing them based on FITS header metadata into a multi-stage workflow.
 
+## Documentation
+
+This tool is part of the astrophotography pipeline. For comprehensive documentation including workflow guides and integration with other tools, see:
+
+- **[Pipeline Overview](https://github.com/jewzaam/ap-base/blob/main/docs/index.md)** - Full pipeline documentation
+- **[Workflow Guide](https://github.com/jewzaam/ap-base/blob/main/docs/workflow.md)** - Detailed workflow with diagrams
+- **[ap-common Reference](https://github.com/jewzaam/ap-base/blob/main/docs/tools/ap-common.md)** - API reference for this tool
+
 ## Usage
 
 ```powershell
