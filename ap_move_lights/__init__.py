@@ -17,7 +17,8 @@ def _get_version() -> str:
             )
             if match:
                 return match.group(1)
-        except Exception:
+        except (OSError, ValueError):
+            # OSError: file read issues, ValueError: encoding issues
             pass
     return "0.1.0"
 

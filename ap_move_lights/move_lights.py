@@ -6,12 +6,16 @@ organizing them based on FITS header metadata into a multi-stage workflow.
 """
 
 import argparse
-import os
+import logging
 from pathlib import Path
 import re
+from typing import Optional
 
 import ap_common
 from . import config
+
+# Configure module logger
+logger = logging.getLogger(__name__)
 
 
 def move_files(
@@ -19,8 +23,8 @@ def move_files(
     dest_dir: str,
     debug: bool = False,
     dryrun: bool = False,
-    blink_dir: str | None = None,
-    accept_dir: str | None = None,
+    blink_dir: Optional[str] = None,
+    accept_dir: Optional[str] = None,
     create_accept: bool = True,
 ) -> None:
     """
@@ -34,7 +38,17 @@ def move_files(
         blink_dir: Directory name for LIGHT files (default: "10_Blink")
         accept_dir: Directory name for accept subdirectories (default: "accept")
         create_accept: Whether to create accept subdirectories (default: True)
+
+    Raises:
+        ValueError: If source_dir does not exist or is not a directory
     """
+    # Validate source directory exists
+    source_path = Path(source_dir)
+    if not source_path.exists():
+        raise ValueError(f"Source directory does not exist: {source_dir}")
+    if not source_path.is_dir():
+        raise ValueError(f"Source path is not a directory: {source_dir}")
+
     input_pattern = config.INPUT_PATTERN_ALL
 
     # Use provided directory names or defaults from config
@@ -67,16 +81,19 @@ def move_files(
         printStatus=True,
     )
 
+    logger.info("Moving LIGHT files...")
     print("Moving LIGHT files..", end=".", flush=True)
 
     # Collect all "target" directories (parent of DATE) so can create "accept" sub-dirs
-    target_dirs = set()
+    target_dirs: set[str] = set()
     count_files = 0
+    failed_files = 0
 
     for datum in data.values():
         filename_src = datum["filename"]
 
         if "type" not in datum:
+            logger.warning("type not set in datum, skipping: %s", datum)
             print(f"WARNING: type not set in datum, skipping: {datum}")
             continue
 
@@ -88,37 +105,53 @@ def move_files(
             statedir=blink_directory,
         )
 
-        # Move the file
-        ap_common.move_file(
-            from_file=filename_src,
-            to_file=filename_dest,
-            debug=debug,
-            dryrun=dryrun,
-        )
+        # Move the file with error handling
+        try:
+            ap_common.move_file(
+                from_file=filename_src,
+                to_file=filename_dest,
+                debug=debug,
+                dryrun=dryrun,
+            )
+            count_files += 1
+        except OSError as e:
+            failed_files += 1
+            logger.error("Failed to move file %s: %s", filename_src, e)
+            print(f"\nERROR: Failed to move {filename_src}: {e}")
+            continue
 
-        count_files += 1
-        if count_files % 50 == 0:
+        if count_files % config.PROGRESS_INTERVAL == 0:
             print(".", end="", flush=True)
 
         # Create accept directories for target directories
         if create_accept:
-            for t in re.findall("(.*)[\\\\\\/]DATE.*", filename_dest):
+            for t in re.findall(config.TARGET_DIR_PATTERN, filename_dest):
                 if t not in target_dirs and not dryrun:
-                    # Create the accept directory as we go, more idempotent overall (resilient to failures)
-                    Path(t + os.sep + accept_directory).mkdir(
-                        parents=True, exist_ok=True
-                    )
+                    # Create the accept directory as we go, more idempotent overall
+                    try:
+                        (Path(t) / accept_directory).mkdir(parents=True, exist_ok=True)
+                    except OSError as e:
+                        logger.error("Failed to create accept directory %s: %s", t, e)
                 target_dirs.add(t)
 
-    print(f"\nMoved {count_files} LIGHT file(s)")
+    summary = f"\nMoved {count_files} LIGHT file(s)"
+    if failed_files > 0:
+        summary += f" ({failed_files} failed)"
+    logger.info(summary.strip())
+    print(summary)
 
     # Clean up empty directories in source
+    logger.info("Cleaning up empty directories...")
     print("Cleaning up empty directories...")
     ap_common.delete_empty_directories(source_dir, dryrun=dryrun)
 
 
 def main() -> None:
-    """Main entry point for the command-line interface."""
+    """Main entry point for the command-line interface.
+
+    Parses command-line arguments and invokes move_files with the provided options.
+    Exits with code 1 if an error occurs during processing.
+    """
     parser = argparse.ArgumentParser(
         description="Move LIGHT files from source directory to destination directory"
     )
@@ -152,15 +185,27 @@ def main() -> None:
 
     args = parser.parse_args()
 
-    move_files(
-        source_dir=args.source_dir,
-        dest_dir=args.dest_dir,
-        debug=args.debug,
-        dryrun=args.dryrun,
-        blink_dir=args.blink_dir,
-        accept_dir=args.accept_dir,
-        create_accept=not args.no_accept,
+    # Configure logging based on debug flag
+    log_level = logging.DEBUG if args.debug else logging.INFO
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     )
+
+    try:
+        move_files(
+            source_dir=args.source_dir,
+            dest_dir=args.dest_dir,
+            debug=args.debug,
+            dryrun=args.dryrun,
+            blink_dir=args.blink_dir,
+            accept_dir=args.accept_dir,
+            create_accept=not args.no_accept,
+        )
+    except ValueError as e:
+        logger.error(str(e))
+        print(f"Error: {e}")
+        raise SystemExit(1) from e
 
 
 if __name__ == "__main__":
