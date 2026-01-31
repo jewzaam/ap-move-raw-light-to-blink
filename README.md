@@ -32,26 +32,16 @@ Options:
 
 ## Installation
 
-### From Source (Development)
+### Development
 
-```powershell
+```bash
 make install-dev
 ```
 
-This installs the package in editable mode along with all dependencies (including `ap-common` from git) and development tools.
+### From Git
 
-### From Git Repository (One-liner)
-
-```powershell
+```bash
 pip install git+https://github.com/jewzaam/ap-move-lights.git
-```
-
-This installs the package directly from the GitHub repository without requiring a local checkout.
-
-### Uninstallation
-
-```powershell
-make uninstall
 ```
 
 ## How It Works
