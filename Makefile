@@ -31,7 +31,7 @@ test-verbose: install-dev
 	$(PYTHON) -m pytest -v
 
 typecheck: install-dev
-	$(PYTHON) -m mypy ap_move_raw_light_to_blink || true
+	$(PYTHON) -m mypy ap_move_raw_light_to_blink
 
 coverage: install-dev
 	$(PYTHON) -m pytest --cov=ap_move_raw_light_to_blink --cov-report=term
