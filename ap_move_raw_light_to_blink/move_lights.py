@@ -13,9 +13,13 @@ import re
 
 import ap_common
 from ap_common.logging_config import setup_logging
+from ap_common.progress import ProgressTracker
 from . import config
 
 logger = logging.getLogger(__name__)
+
+# Set default description width for aligned progress bars
+ProgressTracker.set_default_desc_width(20)
 
 
 def move_files(
