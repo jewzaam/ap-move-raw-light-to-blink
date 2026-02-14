@@ -215,7 +215,8 @@ class TestMoveFiles:
         # Verify mkdir was called with correct keyword arguments
         mock_mkdir.assert_called()
         # Check that mkdir was called with parents=True and exist_ok=True
-        # (The path verification is implicit - if mkdir is called, the accept directory logic ran)
+        # (The path verification is implicit - if mkdir is called,
+        # the accept directory logic ran)
         call_found = False
         for call in mock_mkdir.call_args_list:
             # Handle both new-style (MockCall) and old-style (tuple) call formats

@@ -37,7 +37,8 @@ def move_files(
     create_accept: bool = True,
 ) -> None:
     """
-    Moves LIGHT files from source_dir to dest_dir, organizing them based on FITS header metadata.
+    Moves LIGHT files from source_dir to dest_dir, organizing them
+    based on FITS header metadata.
 
     Args:
         source_dir: Source directory containing raw LIGHT files
@@ -116,7 +117,8 @@ def move_files(
         if create_accept:
             for t in re.findall("(.*)[\\\\\\/]DATE.*", filename_dest):
                 if t not in target_dirs and not dryrun:
-                    # Create the accept directory as we go, more idempotent overall (resilient to failures)
+                    # Create the accept directory as we go,
+                    # more idempotent overall (resilient to failures)
                     Path(t + os.sep + accept_directory).mkdir(
                         parents=True, exist_ok=True
                     )
