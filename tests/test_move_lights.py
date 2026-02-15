@@ -362,9 +362,7 @@ class TestMain:
     @patch("ap_move_raw_light_to_blink.move_lights.move_files")
     def test_main_with_quiet_flag(self, mock_move_files):
         """Test main with --quiet flag."""
-        with patch(
-            "sys.argv", ["move_lights.py", "/source", "/dest", "--quiet"]
-        ):
+        with patch("sys.argv", ["move_lights.py", "/source", "/dest", "--quiet"]):
             with pytest.raises(SystemExit) as exc_info:
                 move_lights.main()
             assert exc_info.value.code == move_lights.EXIT_SUCCESS
@@ -414,9 +412,7 @@ class TestMain:
     @patch("ap_move_raw_light_to_blink.move_lights.move_files")
     def test_main_with_no_accept_flag(self, mock_move_files):
         """Test main with --no-accept flag."""
-        with patch(
-            "sys.argv", ["move_lights.py", "/source", "/dest", "--no-accept"]
-        ):
+        with patch("sys.argv", ["move_lights.py", "/source", "/dest", "--no-accept"]):
             with pytest.raises(SystemExit) as exc_info:
                 move_lights.main()
             assert exc_info.value.code == move_lights.EXIT_SUCCESS
