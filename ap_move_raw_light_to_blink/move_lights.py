@@ -197,7 +197,7 @@ def main() -> None:
             create_accept=not args.no_accept,
         )
     except Exception as e:
-        logger.error(f"Error: {e}")
+        logger.error(f"Error: {e}", exc_info=args.debug)
         sys.exit(EXIT_ERROR)
 
     sys.exit(EXIT_SUCCESS)
