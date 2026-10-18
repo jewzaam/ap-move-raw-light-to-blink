@@ -276,6 +276,69 @@ class TestMoveFiles:
         # Should not create accept directory
         mock_mkdir.assert_not_called()
 
+    @pytest.mark.parametrize("targetname_present", [True, False])
+    @patch("ap_common.get_filtered_metadata")
+    @patch("ap_common.move_file")
+    @patch("ap_common.delete_empty_directories")
+    def test_move_files_unknown_target(
+        self,
+        mock_delete,
+        mock_move_file,
+        mock_get_metadata,
+        targetname_present,
+        tmp_path,
+    ):
+        """Test LIGHT files without targetname get unknown_target as target dir."""
+        source_dir = str(tmp_path / "source")
+        dest_dir = str(tmp_path / "dest")
+        datum = {
+            "filename": str(tmp_path / "source" / "file1.fits"),
+            "type": "LIGHT",
+            "camera": "TestCam",
+            "optic": "TestOptic",
+            "focal_ratio": "5.0",
+            "date": "2024-01-01",
+            "exposureseconds": "60.0",
+            "datetime": "2024-01-01_12-00-00",
+            "filter": "UVIR",
+        }
+        # enrichment drops the key; un-enriched data has it as None
+        if targetname_present:
+            datum["targetname"] = None
+        mock_get_metadata.return_value = {"file1.fits": datum}
+
+        move_lights.move_files(
+            source_dir, dest_dir, create_accept=False, unknown_target="UNKNOWN"
+        )
+
+        to_file = mock_move_file.call_args.kwargs["to_file"]
+        assert os.sep + "UNKNOWN" + os.sep + "DATE_2024-01-01" in to_file
+
+    @patch("ap_common.get_filtered_metadata")
+    @patch("ap_common.move_file")
+    def test_move_files_missing_target_fails_by_default(
+        self, mock_move_file, mock_get_metadata, tmp_path
+    ):
+        """Test LIGHT files without targetname still fail when unknown_target unset."""
+        mock_get_metadata.return_value = {
+            "file1.fits": {
+                "filename": str(tmp_path / "source" / "file1.fits"),
+                "type": "LIGHT",
+                "camera": "TestCam",
+                "optic": "TestOptic",
+                "focal_ratio": "5.0",
+                "date": "2024-01-01",
+                "exposureseconds": "60.0",
+                "datetime": "2024-01-01_12-00-00",
+                "filter": "UVIR",
+            }
+        }
+
+        with pytest.raises(KeyError):
+            move_lights.move_files(str(tmp_path / "source"), str(tmp_path / "dest"))
+
+        mock_move_file.assert_not_called()
+
 
 class TestMain:
     """Tests for main function."""
@@ -297,6 +360,7 @@ class TestMain:
             blink_dir=None,
             accept_dir=None,
             create_accept=True,
+            unknown_target=None,
         )
 
     @patch("ap_move_raw_light_to_blink.move_lights.move_files")
@@ -316,6 +380,7 @@ class TestMain:
             blink_dir=None,
             accept_dir=None,
             create_accept=True,
+            unknown_target=None,
         )
 
     @patch("ap_move_raw_light_to_blink.move_lights.move_files")
@@ -335,6 +400,7 @@ class TestMain:
             blink_dir=None,
             accept_dir=None,
             create_accept=True,
+            unknown_target=None,
         )
 
     @patch("ap_move_raw_light_to_blink.move_lights.move_files")
@@ -357,6 +423,7 @@ class TestMain:
             blink_dir=None,
             accept_dir=None,
             create_accept=True,
+            unknown_target=None,
         )
 
     @patch("ap_move_raw_light_to_blink.move_lights.move_files")
@@ -419,3 +486,20 @@ class TestMain:
 
         call_kwargs = mock_move_files.call_args.kwargs
         assert call_kwargs["create_accept"] is False
+
+    @pytest.mark.parametrize(
+        "extra_args,expected",
+        [
+            (["--unknown-target"], "UNKNOWN"),
+            (["--unknown-target", "NoTarget"], "NoTarget"),
+        ],
+    )
+    @patch("ap_move_raw_light_to_blink.move_lights.move_files")
+    def test_main_with_unknown_target_flag(self, mock_move_files, extra_args, expected):
+        """Test main with --unknown-target flag, with and without a value."""
+        with patch("sys.argv", ["move_lights.py", "/source", "/dest", *extra_args]):
+            with pytest.raises(SystemExit) as exc_info:
+                move_lights.main()
+            assert exc_info.value.code == move_lights.EXIT_SUCCESS
+
+        assert mock_move_files.call_args.kwargs["unknown_target"] == expected
