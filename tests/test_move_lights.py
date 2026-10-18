@@ -503,3 +503,24 @@ class TestMain:
             assert exc_info.value.code == move_lights.EXIT_SUCCESS
 
         assert mock_move_files.call_args.kwargs["unknown_target"] == expected
+
+    @patch(
+        "ap_move_raw_light_to_blink.move_lights.move_files",
+        side_effect=ValueError("boom"),
+    )
+    def test_main_error_exits_with_error_code(self, mock_move_files):
+        """An exception from move_files exits EXIT_ERROR."""
+        with patch("sys.argv", ["move_lights.py", "/source", "/dest"]):
+            with pytest.raises(SystemExit) as exc_info:
+                move_lights.main()
+            assert exc_info.value.code == move_lights.EXIT_ERROR
+
+    @patch("ap_move_raw_light_to_blink.move_lights.move_files")
+    def test_main_missing_positional_exits_usage_error(self, mock_move_files):
+        """Missing dest_dir is an argparse usage error (exit code 2)."""
+        with patch("sys.argv", ["move_lights.py", "/source"]):
+            with pytest.raises(SystemExit) as exc_info:
+                move_lights.main()
+            assert exc_info.value.code == 2
+
+        mock_move_files.assert_not_called()
