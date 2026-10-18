@@ -14,6 +14,7 @@ import sys
 
 import ap_common
 from ap_common.constants import (
+    DIRECTORY_ACCEPT,
     NORMALIZED_HEADER_CAMERA,
     NORMALIZED_HEADER_DATE,
     NORMALIZED_HEADER_DATETIME,
@@ -42,6 +43,7 @@ ProgressTracker.set_default_desc_width(20)
 def move_files(
     source_dir: str,
     dest_dir: str,
+    *,
     debug: bool = False,
     dryrun: bool = False,
     quiet: bool = False,
@@ -70,7 +72,7 @@ def move_files(
 
     # Use provided directory names or defaults from config
     blink_directory = blink_dir if blink_dir is not None else config.DIRECTORY_BLINK
-    accept_directory = accept_dir if accept_dir is not None else config.DIRECTORY_ACCEPT
+    accept_directory = accept_dir if accept_dir is not None else DIRECTORY_ACCEPT
 
     # Required properties for LIGHT files
     required_properties = [
