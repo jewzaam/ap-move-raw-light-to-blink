@@ -20,7 +20,7 @@ This tool is part of the astrophotography pipeline. For comprehensive documentat
 ## Usage
 
 ```powershell
-python -m ap_move_raw_light_to_blink <source_dir> <dest_dir> [--debug] [--dryrun] [--quiet] [--blink-dir DIR] [--accept-dir DIR] [--no-accept] [--help]
+python -m ap_move_raw_light_to_blink <source_dir> <dest_dir> [--debug] [--dryrun] [--quiet] [--blink-dir DIR] [--accept-dir DIR] [--no-accept] [--unknown-target [NAME]] [--help]
 ```
 
 Options:
@@ -32,6 +32,7 @@ Options:
 - `--blink-dir DIR`: Directory name for LIGHT files (default: "10_Blink")
 - `--accept-dir DIR`: Directory name for accept subdirectories (default: "accept")
 - `--no-accept`: Do not create accept subdirectories
+- `--unknown-target [NAME]`: Target name for LIGHT files with no target, e.g. the second camera of a dual rig (default: fail on such files; flag alone: "UNKNOWN")
 - `--help`: Show help message and exit
 
 ## Installation

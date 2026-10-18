@@ -48,6 +48,7 @@ def move_files(
     blink_dir: str | None = None,
     accept_dir: str | None = None,
     create_accept: bool = True,
+    unknown_target: str | None = None,
 ) -> None:
     """
     Moves LIGHT files from source_dir to dest_dir, organizing them
@@ -62,6 +63,8 @@ def move_files(
         blink_dir: Directory name for LIGHT files (default: "10_Blink")
         accept_dir: Directory name for accept subdirectories (default: "accept")
         create_accept: Whether to create accept subdirectories (default: True)
+        unknown_target: Target name for LIGHT files without one
+            (default: None, which fails on such files)
     """
     input_pattern = config.INPUT_PATTERN_ALL
 
@@ -107,6 +110,9 @@ def move_files(
         if NORMALIZED_HEADER_TYPE not in datum:
             logger.warning(f"type not set in datum, skipping: {datum}")
             continue
+
+        if unknown_target and not datum.get(NORMALIZED_HEADER_TARGETNAME):
+            datum[NORMALIZED_HEADER_TARGETNAME] = unknown_target
 
         # Determine destination filename based on metadata (using BLINK directory)
         filename_dest = ap_common.normalize_filename(
@@ -179,6 +185,14 @@ def main() -> None:
         action="store_true",
         help="Do not create accept subdirectories",
     )
+    parser.add_argument(
+        "--unknown-target",
+        type=str,
+        nargs="?",
+        const="UNKNOWN",
+        default=None,
+        help='target name when missing (bare flag: "UNKNOWN")',
+    )
 
     args = parser.parse_args()
 
@@ -195,6 +209,7 @@ def main() -> None:
             blink_dir=args.blink_dir,
             accept_dir=args.accept_dir,
             create_accept=not args.no_accept,
+            unknown_target=args.unknown_target,
         )
     except Exception as e:
         logger.error(f"Error: {e}", exc_info=args.debug)
